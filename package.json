@@ -11,9 +11,7 @@
     "pm2:start": "pm2 start ecosystem.config.js",
     "pm2:stop": "pm2 stop deck-narrator-dev",
     "pm2:restart": "pm2 restart deck-narrator-dev",
-    "pm2:logs": "pm2 logs deck-narrator-dev",
-    "deploy": "npm run build && wrangler pages deploy dist",
-    "deploy:preview": "npm run build && wrangler pages deploy dist --branch preview"
+    "pm2:logs": "pm2 logs deck-narrator-dev"
   },
   "dependencies": {
     "react": "^19.2.0",
