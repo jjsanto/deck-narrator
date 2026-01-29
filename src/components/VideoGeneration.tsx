@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import type { Slide, VideoGenerationProgress } from '../types';
+import type { Slide, VideoGenerationProgress, TTSProvider } from '../types';
 import { TTSService } from '../services/ttsService';
+import { WebSpeechService } from '../services/webSpeechService';
 import { VideoCompiler } from '../services/videoCompiler';
 
 interface VideoGenerationProps {
   slides: Slide[];
   voiceId: string;
+  ttsProvider: TTSProvider;
   apiKey: string;
   onComplete: (videoBlob: Blob, slides: Slide[]) => void;
   onBack: () => void;
@@ -14,6 +16,7 @@ interface VideoGenerationProps {
 export const VideoGeneration: React.FC<VideoGenerationProps> = ({
   slides: initialSlides,
   voiceId,
+  ttsProvider,
   apiKey,
   onComplete,
   onBack,
@@ -48,7 +51,11 @@ export const VideoGeneration: React.FC<VideoGenerationProps> = ({
         message: 'Generating speech audio...',
       });
 
-      const ttsService = new TTSService(apiKey);
+      // Create TTS service based on provider
+      const ttsService = ttsProvider === 'lemonfox'
+        ? new TTSService(apiKey)
+        : new WebSpeechService();
+
       const updatedSlides = [...slides];
 
       for (let i = 0; i < updatedSlides.length; i++) {

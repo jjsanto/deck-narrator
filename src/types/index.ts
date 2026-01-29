@@ -9,9 +9,12 @@ export interface Slide {
   audioDuration?: number;
 }
 
+export type TTSProvider = 'lemonfox' | 'webspeech';
+
 export interface ProjectState {
   pdfFile: File | null;
   selectedVoiceId: string;
+  ttsProvider: TTSProvider;
   slides: Slide[];
   finalVideoBlob: Blob | null;
   apiKeys: {

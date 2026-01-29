@@ -11,6 +11,7 @@ function App() {
   const [project, setProject] = useState<ProjectState>({
     pdfFile: null,
     selectedVoiceId: '',
+    ttsProvider: 'webspeech',
     slides: [],
     finalVideoBlob: null,
     apiKeys: {
@@ -24,6 +25,7 @@ function App() {
   const handleUploadComplete = async (
     file: File,
     voiceId: string,
+    ttsProvider: 'lemonfox' | 'webspeech',
     apiKeys: { openRouter: string; lemonfox: string }
   ) => {
     setIsProcessing(true);
@@ -36,6 +38,7 @@ function App() {
       setProject({
         pdfFile: file,
         selectedVoiceId: voiceId,
+        ttsProvider,
         slides,
         finalVideoBlob: null,
         apiKeys,
@@ -68,6 +71,7 @@ function App() {
     setProject({
       pdfFile: null,
       selectedVoiceId: '',
+      ttsProvider: 'webspeech',
       slides: [],
       finalVideoBlob: null,
       apiKeys: {
@@ -157,6 +161,7 @@ function App() {
           <VideoGeneration
             slides={project.slides}
             voiceId={project.selectedVoiceId}
+            ttsProvider={project.ttsProvider}
             apiKey={project.apiKeys.lemonfox}
             onComplete={handleVideoGenerationComplete}
             onBack={handleBackToReview}
