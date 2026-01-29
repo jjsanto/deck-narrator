@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 min-h-screen text-white;
+    background-attachment: fixed;
+  }
+
+  * {
+    @apply border-glass-border;
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-glass-bg backdrop-blur-glass border border-glass-border rounded-2xl shadow-glass;
+    background-image: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+  }
+
+  .glass-card-hover {
+    @apply glass-card transition-all duration-300 hover:bg-glass-hover hover:shadow-glass hover:scale-[1.02];
+  }
+
+  .glass-button {
+    @apply px-6 py-3 rounded-xl bg-glass-bg backdrop-blur-glass border border-glass-border
+           font-medium transition-all duration-300 hover:bg-glass-hover hover:scale-105
+           active:scale-95 shadow-glass-sm;
+  }
+
+  .glass-button-primary {
+    @apply glass-button bg-gradient-to-r from-purple-500/30 to-pink-500/30
+           hover:from-purple-500/40 hover:to-pink-500/40;
+  }
+
+  .glass-input {
+    @apply w-full px-4 py-3 rounded-xl bg-glass-bg backdrop-blur-glass border border-glass-border
+           focus:outline-none focus:ring-2 focus:ring-purple-500/50 transition-all duration-300
+           placeholder-gray-400 text-white;
+  }
+
+  .glass-textarea {
+    @apply glass-input resize-none;
+  }
+}
