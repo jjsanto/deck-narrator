@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { VOICE_PROFILES, DEFAULT_VOICE, type VoiceProfile } from '../config/voices';
+import { OPENROUTER_MODELS, DEFAULT_MODEL } from '../config/models';
 import { API_CONFIG } from '../config/api';
 import { TTSService } from '../services/ttsService';
 import { WebSpeechService } from '../services/webSpeechService';
@@ -10,6 +11,7 @@ interface UploadSetupProps {
     file: File,
     voiceId: string,
     ttsProvider: TTSProvider,
+    selectedModel: string,
     apiKeys: { openRouter: string; lemonfox: string }
   ) => void;
 }
@@ -18,6 +20,7 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
   const [file, setFile] = useState<File | null>(null);
   const [selectedVoice, setSelectedVoice] = useState(DEFAULT_VOICE);
   const [ttsProvider, setTtsProvider] = useState<TTSProvider>('webspeech');
+  const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
   const [openRouterKey, setOpenRouterKey] = useState('');
   const [lemonfoxKey, setLemonfoxKey] = useState('');
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
@@ -113,7 +116,7 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
       return;
     }
 
-    onComplete(file, selectedVoice, ttsProvider, {
+    onComplete(file, selectedVoice, ttsProvider, selectedModel, {
       openRouter: openRouterKey,
       lemonfox: lemonfoxKey,
     });
@@ -240,6 +243,27 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
                 : 'Used for text-to-speech • Get at lemonfox.ai'}
             </p>
           </div>
+        </div>
+
+        {/* Model Selection */}
+        <div className="mt-6">
+          <label className="block text-sm font-medium text-gray-300 mb-2">
+            AI Model for Script Generation <span className="text-red-400">*</span>
+          </label>
+          <select
+            value={selectedModel}
+            onChange={(e) => setSelectedModel(e.target.value)}
+            className="glass-input"
+          >
+            {OPENROUTER_MODELS.map((model) => (
+              <option key={model.id} value={model.id}>
+                {model.name} {model.free ? '(Free)' : ''} - {model.description}
+              </option>
+            ))}
+          </select>
+          <p className="text-xs text-gray-400 mt-1">
+            Choose the AI model for analyzing slides and generating narration scripts
+          </p>
         </div>
       </div>
 

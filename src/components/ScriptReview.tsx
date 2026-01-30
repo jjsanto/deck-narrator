@@ -6,6 +6,7 @@ import { PDFService } from '../services/pdfService';
 interface ScriptReviewProps {
   slides: Slide[];
   apiKey: string;
+  selectedModel: string;
   onComplete: (slides: Slide[]) => void;
   onBack: () => void;
 }
@@ -13,6 +14,7 @@ interface ScriptReviewProps {
 export const ScriptReview: React.FC<ScriptReviewProps> = ({
   slides: initialSlides,
   apiKey,
+  selectedModel,
   onComplete,
   onBack,
 }) => {
@@ -35,7 +37,7 @@ export const ScriptReview: React.FC<ScriptReviewProps> = ({
 
     try {
       const service = new OpenRouterService(apiKey);
-      const script = await service.generateScript(imageDataUrl);
+      const script = await service.generateScript(imageDataUrl, selectedModel);
 
       if (!script || script.trim().length === 0) {
         throw new Error('Generated script is empty');

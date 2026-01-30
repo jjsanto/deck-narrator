@@ -15,6 +15,7 @@ export interface ProjectState {
   pdfFile: File | null;
   selectedVoiceId: string;
   ttsProvider: TTSProvider;
+  selectedModel: string;
   slides: Slide[];
   finalVideoBlob: Blob | null;
   apiKeys: {

@@ -12,6 +12,7 @@ function App() {
     pdfFile: null,
     selectedVoiceId: '',
     ttsProvider: 'webspeech',
+    selectedModel: '',
     slides: [],
     finalVideoBlob: null,
     apiKeys: {
@@ -26,6 +27,7 @@ function App() {
     file: File,
     voiceId: string,
     ttsProvider: 'lemonfox' | 'webspeech',
+    selectedModel: string,
     apiKeys: { openRouter: string; lemonfox: string }
   ) => {
     setIsProcessing(true);
@@ -39,6 +41,7 @@ function App() {
         pdfFile: file,
         selectedVoiceId: voiceId,
         ttsProvider,
+        selectedModel,
         slides,
         finalVideoBlob: null,
         apiKeys,
@@ -72,6 +75,7 @@ function App() {
       pdfFile: null,
       selectedVoiceId: '',
       ttsProvider: 'webspeech',
+      selectedModel: '',
       slides: [],
       finalVideoBlob: null,
       apiKeys: {
@@ -152,6 +156,7 @@ function App() {
           <ScriptReview
             slides={project.slides}
             apiKey={project.apiKeys.openRouter}
+            selectedModel={project.selectedModel}
             onComplete={handleScriptReviewComplete}
             onBack={handleBackToUpload}
           />

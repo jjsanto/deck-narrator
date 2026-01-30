@@ -8,7 +8,7 @@ export class OpenRouterService {
     this.apiKey = apiKey;
   }
 
-  async generateScript(imageDataUrl: string): Promise<string> {
+  async generateScript(imageDataUrl: string, model: string): Promise<string> {
     try {
       const response = await fetch(API_CONFIG.openRouter.baseUrl, {
         method: 'POST',
@@ -19,7 +19,7 @@ export class OpenRouterService {
           'X-Title': 'Deck Narrator',
         },
         body: JSON.stringify({
-          model: API_CONFIG.openRouter.model,
+          model: model,
           messages: [
             {
               role: 'user',
