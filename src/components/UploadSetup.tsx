@@ -317,85 +317,81 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto pr-2">
-          {ttsProvider === 'lemonfox' ? (
-            // Lemonfox voices
-            lemonfoxVoices.map((voice: VoiceProfile) => (
-              <div
-                key={voice.id}
-                className={`glass-card-hover p-4 cursor-pointer ${
-                  selectedVoice === voice.id ? 'ring-2 ring-purple-500' : ''
-                }`}
-                onClick={() => setSelectedVoice(voice.id)}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-white">{voice.name}</h3>
-                    <p className="text-sm text-gray-400">
-                      {voice.gender} • {voice.region}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-2">{voice.description}</p>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleVoicePreview(voice.id);
-                    }}
-                    disabled={isPlayingPreview}
-                    className="ml-2 p-2 rounded-lg bg-purple-500/20 hover:bg-purple-500/30
-                             disabled:opacity-50 disabled:cursor-not-allowed transition-all"
-                  >
-                    <svg
-                      className="w-5 h-5 text-purple-400"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                    </svg>
-                  </button>
+          {ttsProvider === 'lemonfox' && lemonfoxVoices.map((voice: VoiceProfile) => (
+            <div
+              key={voice.id}
+              className={`glass-card-hover p-4 cursor-pointer ${
+                selectedVoice === voice.id ? 'ring-2 ring-purple-500' : ''
+              }`}
+              onClick={() => setSelectedVoice(voice.id)}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-white">{voice.name}</h3>
+                  <p className="text-sm text-gray-400">
+                    {voice.gender} • {voice.region}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-2">{voice.description}</p>
                 </div>
-              </div>
-            ))
-          ) : (
-            // Web Speech voices
-            webSpeechVoices.map((voice) => (
-              <div
-                key={voice.voiceURI}
-                className={`glass-card-hover p-4 cursor-pointer ${
-                  selectedVoice === (voice.voiceURI || voice.name) ? 'ring-2 ring-green-500' : ''
-                }`}
-                onClick={() => setSelectedVoice(voice.voiceURI || voice.name)}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <h3 className="font-semibold text-white">{voice.name}</h3>
-                    <p className="text-sm text-gray-400">
-                      {voice.lang}
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {voice.localService ? 'Local' : 'Remote'}
-                    </p>
-                  </div>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleVoicePreview(voice.voiceURI || voice.name);
-                    }}
-                    disabled={isPlayingPreview}
-                    className="ml-2 p-2 rounded-lg bg-green-500/20 hover:bg-green-500/30
-                             disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleVoicePreview(voice.id);
+                  }}
+                  disabled={isPlayingPreview}
+                  className="ml-2 p-2 rounded-lg bg-purple-500/20 hover:bg-purple-500/30
+                           disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  <svg
+                    className="w-5 h-5 text-purple-400"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
                   >
-                    <svg
-                      className="w-5 h-5 text-green-400"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
-                    </svg>
-                  </button>
-                </div>
+                    <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                  </svg>
+                </button>
               </div>
-            ))
-          )}
+            </div>
+          ))}
+
+          {ttsProvider === 'webspeech' && webSpeechVoices.map((voice) => (
+            <div
+              key={voice.voiceURI}
+              className={`glass-card-hover p-4 cursor-pointer ${
+                selectedVoice === (voice.voiceURI || voice.name) ? 'ring-2 ring-green-500' : ''
+              }`}
+              onClick={() => setSelectedVoice(voice.voiceURI || voice.name)}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-white">{voice.name}</h3>
+                  <p className="text-sm text-gray-400">
+                    {voice.lang}
+                  </p>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {voice.localService ? 'Local' : 'Remote'}
+                  </p>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleVoicePreview(voice.voiceURI || voice.name);
+                  }}
+                  disabled={isPlayingPreview}
+                  className="ml-2 p-2 rounded-lg bg-green-500/20 hover:bg-green-500/30
+                           disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  <svg
+                    className="w-5 h-5 text-green-400"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
 
         {ttsProvider === 'webspeech' && webSpeechVoices.length === 0 && (
