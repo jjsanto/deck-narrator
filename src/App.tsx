@@ -4,14 +4,14 @@ import { ScriptReview } from './components/ScriptReview';
 import { VideoGeneration } from './components/VideoGeneration';
 import { Download } from './components/Download';
 import { PDFService } from './services/pdfService';
-import type { WorkflowStage, Slide, ProjectState } from './types';
+import type { WorkflowStage, Slide, ProjectState, TTSProvider } from './types';
 
 function App() {
   const [stage, setStage] = useState<WorkflowStage>('upload');
   const [project, setProject] = useState<ProjectState>({
     pdfFile: null,
     selectedVoiceId: '',
-    ttsProvider: 'webspeech',
+    ttsProvider: 'edgetts',
     selectedModel: '',
     slides: [],
     finalVideoBlob: null,
@@ -26,7 +26,7 @@ function App() {
   const handleUploadComplete = async (
     file: File,
     voiceId: string,
-    ttsProvider: 'lemonfox' | 'webspeech',
+    ttsProvider: TTSProvider,
     selectedModel: string,
     apiKeys: { openRouter: string; lemonfox: string }
   ) => {
@@ -74,7 +74,7 @@ function App() {
     setProject({
       pdfFile: null,
       selectedVoiceId: '',
-      ttsProvider: 'webspeech',
+      ttsProvider: 'edgetts',
       selectedModel: '',
       slides: [],
       finalVideoBlob: null,
