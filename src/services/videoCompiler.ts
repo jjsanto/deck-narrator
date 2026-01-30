@@ -141,47 +141,73 @@ export class VideoCompiler {
 
     console.log(`[VideoCompiler] Starting rendering of ${slides.length} slides at ${fps} fps`);
 
-    for (let i = 0; i < slides.length; i++) {
-      const slide = slides[i];
+    // Pre-load all images and calculate timings
+    const slideData: { image: HTMLImageElement; frames: number }[] = [];
+    for (const slide of slides) {
+      const image = await this.loadImage(slide.imageDataUrl);
       const slideDuration = (slide.audioBuffer?.duration || 0) + paddingSeconds;
       const slideFrames = Math.ceil(slideDuration * fps);
-
-      console.log(`[VideoCompiler] Slide ${i + 1}: duration=${slideDuration.toFixed(2)}s, frames=${slideFrames}`);
-
-      this.progressCallback({
-        stage: 'rendering',
-        currentSlide: i + 1,
-        totalSlides: slides.length,
-        percentage: Math.round(((i + 1) / slides.length) * 100),
-        message: `Rendering slide ${i + 1} of ${slides.length}`,
-      });
-
-      // Load slide image
-      const image = await this.loadImage(slide.imageDataUrl);
-
-      // Render exact number of frames for this slide duration
-      const startTime = performance.now();
-      for (let frame = 0; frame < slideFrames; frame++) {
-        // Draw the slide
-        this.ctx.drawImage(image, 0, 0, this.canvas.width, this.canvas.height);
-
-        // Calculate precise wait time to maintain consistent frame rate
-        const targetFrameTime = startTime + (frame + 1) * frameDuration;
-        const currentTime = performance.now();
-        const waitTime = Math.max(0, targetFrameTime - currentTime);
-
-        // Use requestAnimationFrame for smoother timing if wait is very short
-        if (waitTime < 5) {
-          await new Promise(resolve => requestAnimationFrame(() => resolve(undefined)));
-        } else {
-          await this.waitForFrame(waitTime);
-        }
-      }
-
-      console.log(`[VideoCompiler] Slide ${i + 1} complete: rendered ${slideFrames} frames in ${(performance.now() - startTime).toFixed(2)}ms`);
+      slideData.push({ image, frames: slideFrames });
+      console.log(`[VideoCompiler] Slide loaded: duration=${slideDuration.toFixed(2)}s, frames=${slideFrames}`);
     }
 
-    console.log(`[VideoCompiler] All slides rendered`);
+    // Calculate total frames
+    const totalFrames = slideData.reduce((sum, slide) => sum + slide.frames, 0);
+    console.log(`[VideoCompiler] Total frames to render: ${totalFrames}`);
+
+    // Render all frames
+    let currentFrame = 0;
+    let currentSlideIndex = 0;
+    let frameInCurrentSlide = 0;
+
+    const startTime = performance.now();
+
+    while (currentFrame < totalFrames) {
+      // Determine which slide to show
+      if (frameInCurrentSlide >= slideData[currentSlideIndex].frames) {
+        // Move to next slide
+        currentSlideIndex++;
+        frameInCurrentSlide = 0;
+
+        if (currentSlideIndex >= slideData.length) {
+          break; // All slides rendered
+        }
+
+        console.log(`[VideoCompiler] Moving to slide ${currentSlideIndex + 1}`);
+
+        this.progressCallback({
+          stage: 'rendering',
+          currentSlide: currentSlideIndex + 1,
+          totalSlides: slides.length,
+          percentage: Math.round((currentFrame / totalFrames) * 100),
+          message: `Rendering slide ${currentSlideIndex + 1} of ${slides.length}`,
+        });
+      }
+
+      // Draw current slide
+      const currentSlide = slideData[currentSlideIndex];
+      this.ctx.drawImage(
+        currentSlide.image,
+        0, 0,
+        this.canvas.width,
+        this.canvas.height
+      );
+
+      // Wait for next frame using consistent frame timing
+      const targetTime = startTime + (currentFrame + 1) * frameDuration;
+      const now = performance.now();
+      const waitTime = targetTime - now;
+
+      if (waitTime > 0) {
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
+
+      currentFrame++;
+      frameInCurrentSlide++;
+    }
+
+    const elapsed = (performance.now() - startTime) / 1000;
+    console.log(`[VideoCompiler] Rendering complete: ${totalFrames} frames in ${elapsed.toFixed(2)}s (expected: ${(totalFrames / fps).toFixed(2)}s)`);
   }
 
   private loadImage(dataUrl: string): Promise<HTMLImageElement> {
