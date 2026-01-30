@@ -46,8 +46,12 @@ export class PuterTTSService {
     try {
       await this.ensurePuterLoaded();
 
+      console.log('[PuterTTS] Generating speech:', { text: text.substring(0, 50), voiceId });
+
       // Parse voice ID (format: "engine:voice" e.g., "neural:Joanna")
       const [engine, voice] = voiceId.split(':');
+
+      console.log('[PuterTTS] Using engine:', engine, 'voice:', voice);
 
       // Generate speech using Puter
       const audio = await this.puter.ai.txt2speech(text, {
@@ -56,25 +60,135 @@ export class PuterTTSService {
         language: 'en-US'
       });
 
-      // The audio object from Puter has a src property
-      const audioUrl = audio.src;
+      console.log('[PuterTTS] Audio object received:', audio);
+
+      // Try different ways to get audio data
+      let audioUrl = audio.src || audio.url || audio.audioUrl;
+
+      // If audio is an Audio element, get its src
+      if (!audioUrl && audio instanceof HTMLAudioElement) {
+        audioUrl = audio.src;
+      }
+
+      // If audio has a blob property
+      if (!audioUrl && audio.blob) {
+        audioUrl = URL.createObjectURL(audio.blob);
+      }
+
+      console.log('[PuterTTS] Audio URL:', audioUrl);
 
       if (!audioUrl) {
-        throw new Error('Failed to get audio URL from Puter');
+        console.error('[PuterTTS] Audio object structure:', Object.keys(audio));
+        throw new Error('Failed to get audio URL from Puter - no src/url/blob found');
       }
 
       // Fetch the audio data
+      console.log('[PuterTTS] Fetching audio from URL...');
       const response = await fetch(audioUrl);
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch audio: ${response.status} ${response.statusText}`);
+      }
+
       const arrayBuffer = await response.arrayBuffer();
+      console.log('[PuterTTS] Audio fetched, size:', arrayBuffer.byteLength);
 
       // Decode to AudioBuffer
+      console.log('[PuterTTS] Decoding audio...');
       const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+      console.log('[PuterTTS] Audio decoded successfully, duration:', audioBuffer.duration);
 
       return audioBuffer;
     } catch (error) {
-      console.error('[PuterTTS] Generation error:', error);
-      throw new Error(`Failed to generate speech: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('[PuterTTS] Direct URL method failed, trying alternative approach...');
+
+      // Try alternative approach: play and capture audio
+      try {
+        return await this.generateSpeechViaCapture(text, voiceId);
+      } catch (captureError) {
+        console.error('[PuterTTS] Both methods failed');
+        console.error('[PuterTTS] Error details:', {
+          message: error instanceof Error ? error.message : 'Unknown error',
+          stack: error instanceof Error ? error.stack : undefined,
+          voiceId,
+          textLength: text.length
+        });
+        throw new Error(`Failed to generate speech: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      }
     }
+  }
+
+  /**
+   * Alternative method: Generate speech by capturing playback
+   */
+  private async generateSpeechViaCapture(text: string, voiceId: string): Promise<AudioBuffer> {
+    console.log('[PuterTTS] Using capture method...');
+
+    const [engine, voice] = voiceId.split(':');
+
+    const audio = await this.puter.ai.txt2speech(text, {
+      voice: voice || 'Joanna',
+      engine: engine || 'neural',
+      language: 'en-US'
+    });
+
+    return new Promise((resolve, reject) => {
+      // Create media element source
+      const audioElement = audio instanceof HTMLAudioElement ? audio : new Audio(audio.src || audio);
+
+      // Create audio context nodes
+      const source = this.audioContext.createMediaElementSource(audioElement);
+      const destination = this.audioContext.createMediaStreamDestination();
+
+      // Connect nodes
+      source.connect(destination);
+      source.connect(this.audioContext.destination); // Also play it
+
+      // Record the stream
+      const mediaRecorder = new MediaRecorder(destination.stream);
+      const chunks: Blob[] = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          chunks.push(e.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        try {
+          const blob = new Blob(chunks, { type: 'audio/webm' });
+          const arrayBuffer = await blob.arrayBuffer();
+          const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
+          resolve(audioBuffer);
+        } catch (err) {
+          reject(err);
+        }
+      };
+
+      // Start recording and playing
+      mediaRecorder.start();
+      audioElement.play().catch(reject);
+
+      // Stop recording when audio ends
+      audioElement.onended = () => {
+        setTimeout(() => {
+          mediaRecorder.stop();
+        }, 500);
+      };
+
+      audioElement.onerror = () => {
+        mediaRecorder.stop();
+        reject(new Error('Audio playback failed'));
+      };
+
+      // Timeout after 60 seconds
+      setTimeout(() => {
+        if (mediaRecorder.state === 'recording') {
+          mediaRecorder.stop();
+          reject(new Error('Recording timeout'));
+        }
+      }, 60000);
+    });
   }
 
   /**
