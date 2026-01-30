@@ -87,6 +87,12 @@ export const VideoGeneration: React.FC<VideoGenerationProps> = ({
             audioBuffer,
             audioDuration: audioBuffer.duration,
           };
+
+          // Add delay between slides to avoid rate limiting (except for last slide)
+          if (ttsProvider === 'putertts' && i < updatedSlides.length - 1) {
+            console.log(`[VideoGeneration] Waiting 1.5s before next slide to avoid rate limiting...`);
+            await new Promise(resolve => setTimeout(resolve, 1500));
+          }
         } catch (err) {
           console.error(`Failed to generate TTS for slide ${i + 1}:`, err);
           throw new Error(`Failed to generate speech for slide ${i + 1}: ${err instanceof Error ? err.message : 'Unknown error'}`);

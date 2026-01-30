@@ -41,8 +41,9 @@ export class PuterTTSService {
 
   /**
    * Generate speech using Puter TTS and convert to AudioBuffer
+   * Includes retry logic for reliability
    */
-  async generateSpeech(text: string, voiceId: string): Promise<AudioBuffer> {
+  async generateSpeech(text: string, voiceId: string, retryCount = 0): Promise<AudioBuffer> {
     try {
       await this.ensurePuterLoaded();
 
@@ -106,14 +107,25 @@ export class PuterTTSService {
       try {
         return await this.generateSpeechViaCapture(text, voiceId);
       } catch (captureError) {
-        console.error('[PuterTTS] Both methods failed');
+        // Retry logic with exponential backoff
+        const maxRetries = 3;
+        if (retryCount < maxRetries) {
+          const delay = Math.pow(2, retryCount) * 1000; // 1s, 2s, 4s
+          console.warn(`[PuterTTS] Attempt ${retryCount + 1} failed, retrying in ${delay}ms...`);
+
+          await new Promise(resolve => setTimeout(resolve, delay));
+          return this.generateSpeech(text, voiceId, retryCount + 1);
+        }
+
+        console.error('[PuterTTS] All retry attempts failed');
         console.error('[PuterTTS] Error details:', {
           message: error instanceof Error ? error.message : 'Unknown error',
           stack: error instanceof Error ? error.stack : undefined,
           voiceId,
-          textLength: text.length
+          textLength: text.length,
+          retries: retryCount
         });
-        throw new Error(`Failed to generate speech: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        throw new Error(`Failed to generate speech after ${maxRetries} retries: ${error instanceof Error ? error.message : 'Unknown error'}`);
       }
     }
   }
