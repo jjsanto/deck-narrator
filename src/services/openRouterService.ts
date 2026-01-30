@@ -10,6 +10,8 @@ export class OpenRouterService {
 
   async generateScript(imageDataUrl: string, model: string): Promise<string> {
     try {
+      console.log('[OpenRouter] Generating script with model:', model);
+
       const response = await fetch(API_CONFIG.openRouter.baseUrl, {
         method: 'POST',
         headers: {
@@ -43,6 +45,12 @@ export class OpenRouterService {
 
       if (!response.ok) {
         const error = await response.json().catch(() => ({}));
+        console.error('[OpenRouter] API error:', {
+          status: response.status,
+          statusText: response.statusText,
+          model: model,
+          error: error,
+        });
         throw this.createError(
           `OpenRouter API error: ${response.status} ${response.statusText}`,
           error
