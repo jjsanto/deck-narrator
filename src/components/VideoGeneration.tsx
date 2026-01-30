@@ -42,6 +42,15 @@ export const VideoGeneration: React.FC<VideoGenerationProps> = ({
     setError(null);
 
     try {
+      // Check if using Web Speech API - it cannot be used for video generation
+      if (ttsProvider === 'webspeech') {
+        throw new Error(
+          'Web Speech API cannot be used for video generation. ' +
+          'Please go back and select Lemonfox TTS to generate videos. ' +
+          'Web Speech is only for testing scripts and voice previews.'
+        );
+      }
+
       // Step 1: Generate TTS for all slides
       setProgress({
         stage: 'tts',

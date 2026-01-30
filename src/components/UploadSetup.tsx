@@ -167,7 +167,8 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
               <ul className="text-xs text-gray-500 space-y-1">
                 <li>✓ Completely free</li>
                 <li>✓ No limits</li>
-                <li>✓ Great for testing</li>
+                <li>✓ Perfect for testing scripts</li>
+                <li>⚠️ Cannot generate videos - preview only</li>
                 <li>• Voice quality varies by browser/OS</li>
               </ul>
             </div>
@@ -198,6 +199,7 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
               <ul className="text-xs text-gray-500 space-y-1">
                 <li>✓ Studio-quality voices</li>
                 <li>✓ 28 voice profiles</li>
+                <li>✓ Required for video generation</li>
                 <li>✓ Consistent quality</li>
                 <li>• Requires API key</li>
               </ul>
