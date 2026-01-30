@@ -9,7 +9,7 @@ export interface Slide {
   audioDuration?: number;
 }
 
-export type TTSProvider = 'lemonfox' | 'webspeech';
+export type TTSProvider = 'lemonfox' | 'webspeech' | 'edgetts';
 
 export interface ProjectState {
   pdfFile: File | null;

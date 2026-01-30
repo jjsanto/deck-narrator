@@ -4,6 +4,7 @@ import { OPENROUTER_MODELS, DEFAULT_MODEL } from '../config/models';
 import { API_CONFIG } from '../config/api';
 import { TTSService } from '../services/ttsService';
 import { WebSpeechService } from '../services/webSpeechService';
+import { EdgeTTSService, type EdgeTTSVoice } from '../services/edgeTTSService';
 import type { TTSProvider } from '../types';
 
 interface UploadSetupProps {
@@ -18,19 +19,20 @@ interface UploadSetupProps {
 
 export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
   const [file, setFile] = useState<File | null>(null);
-  const [selectedVoice, setSelectedVoice] = useState(DEFAULT_VOICE);
-  const [ttsProvider, setTtsProvider] = useState<TTSProvider>('webspeech');
+  const [selectedVoice, setSelectedVoice] = useState('en-US-AriaNeural');
+  const [ttsProvider, setTtsProvider] = useState<TTSProvider>('edgetts');
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
   const [openRouterKey, setOpenRouterKey] = useState('');
   const [lemonfoxKey, setLemonfoxKey] = useState('');
   const [isPlayingPreview, setIsPlayingPreview] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [filterRegion, setFilterRegion] = useState<'ALL' | 'US' | 'UK'>('ALL');
+  const [filterRegion, setFilterRegion] = useState<'ALL' | 'US' | 'UK' | 'AU' | 'IN'>('ALL');
   const [webSpeechVoices, setWebSpeechVoices] = useState<SpeechSynthesisVoice[]>([]);
+  const [edgeTTSVoices, setEdgeTTSVoices] = useState<EdgeTTSVoice[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
-  // Load Web Speech voices
+  // Load voices based on TTS provider
   useEffect(() => {
     if (ttsProvider === 'webspeech' && WebSpeechService.isSupported()) {
       const loadVoices = () => {
@@ -43,6 +45,13 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
 
       loadVoices();
       window.speechSynthesis.onvoiceschanged = loadVoices;
+    } else if (ttsProvider === 'edgetts') {
+      // Load Edge TTS voices
+      const loadEdgeVoices = async () => {
+        const voices = await EdgeTTSService.getAvailableVoices();
+        setEdgeTTSVoices(voices);
+      };
+      loadEdgeVoices();
     }
   }, [ttsProvider]);
 
@@ -74,6 +83,10 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
     try {
       if (ttsProvider === 'webspeech') {
         const service = new WebSpeechService();
+        await service.createPreviewAudio(voiceId);
+        setIsPlayingPreview(false);
+      } else if (ttsProvider === 'edgetts') {
+        const service = new EdgeTTSService();
         await service.createPreviewAudio(voiceId);
         setIsPlayingPreview(false);
       } else {
@@ -112,7 +125,7 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
     }
 
     if (ttsProvider === 'lemonfox' && !lemonfoxKey) {
-      setError('Please enter your Lemonfox API key or switch to Web Speech (Free)');
+      setError('Please enter your Lemonfox API key or switch to Edge TTS (Free)');
       return;
     }
 
@@ -141,7 +154,7 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
       {/* TTS Provider Selection */}
       <div className="glass-card p-6 space-y-4">
         <h2 className="text-2xl font-semibold text-white mb-4">Choose TTS Provider</h2>
-        <div className="grid md:grid-cols-2 gap-4">
+        <div className="grid md:grid-cols-3 gap-4">
           <button
             onClick={() => {
               setTtsProvider('webspeech');
@@ -170,6 +183,38 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
                 <li>✓ Perfect for testing scripts</li>
                 <li>⚠️ Cannot generate videos - preview only</li>
                 <li>• Voice quality varies by browser/OS</li>
+              </ul>
+            </div>
+          </button>
+
+          <button
+            onClick={() => {
+              setTtsProvider('edgetts');
+              setSelectedVoice('en-US-AriaNeural');
+            }}
+            className={`p-6 rounded-xl border-2 transition-all ${
+              ttsProvider === 'edgetts'
+                ? 'border-blue-500 bg-blue-500/10'
+                : 'border-glass-border bg-glass-bg hover:bg-glass-hover'
+            }`}
+          >
+            <div className="text-left space-y-2">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl">🚀</span>
+                <h3 className="text-xl font-semibold text-white">Edge TTS</h3>
+                <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full">
+                  FREE
+                </span>
+              </div>
+              <p className="text-sm text-gray-400">
+                Microsoft Edge TTS • No API key • Generates videos
+              </p>
+              <ul className="text-xs text-gray-500 space-y-1">
+                <li>✓ Completely free</li>
+                <li>✓ No limits</li>
+                <li>✓ 22+ professional voices</li>
+                <li>✓ Generates videos successfully</li>
+                <li>✓ High quality neural voices</li>
               </ul>
             </div>
           </button>
@@ -340,6 +385,23 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
               ))}
             </div>
           )}
+          {ttsProvider === 'edgetts' && (
+            <div className="flex gap-2">
+              {(['ALL', 'US', 'UK', 'AU', 'IN'] as const).map((region) => (
+                <button
+                  key={region}
+                  onClick={() => setFilterRegion(region)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    filterRegion === region
+                      ? 'bg-blue-500/30 text-white'
+                      : 'bg-glass-bg text-gray-400 hover:text-white'
+                  }`}
+                >
+                  {region}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto pr-2">
@@ -370,6 +432,44 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
                 >
                   <svg
                     className="w-5 h-5 text-purple-400"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M6.3 2.841A1.5 1.5 0 004 4.11V15.89a1.5 1.5 0 002.3 1.269l9.344-5.89a1.5 1.5 0 000-2.538L6.3 2.84z" />
+                  </svg>
+                </button>
+              </div>
+            </div>
+          ))}
+
+          {ttsProvider === 'edgetts' && edgeTTSVoices
+            .filter((v) => filterRegion === 'ALL' || v.locale.startsWith(`en-${filterRegion}`))
+            .map((voice) => (
+            <div
+              key={voice.id}
+              className={`glass-card-hover p-4 cursor-pointer ${
+                selectedVoice === voice.id ? 'ring-2 ring-blue-500' : ''
+              }`}
+              onClick={() => setSelectedVoice(voice.id)}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <h3 className="font-semibold text-white">{voice.name}</h3>
+                  <p className="text-sm text-gray-400">
+                    {voice.gender} • {voice.locale}
+                  </p>
+                </div>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleVoicePreview(voice.id);
+                  }}
+                  disabled={isPlayingPreview}
+                  className="ml-2 p-2 rounded-lg bg-blue-500/20 hover:bg-blue-500/30
+                           disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                >
+                  <svg
+                    className="w-5 h-5 text-blue-400"
                     fill="currentColor"
                     viewBox="0 0 20 20"
                   >
