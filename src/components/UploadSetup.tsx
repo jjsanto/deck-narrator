@@ -119,9 +119,9 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
     });
   };
 
-  const filteredVoices = ttsProvider === 'lemonfox'
-    ? VOICE_PROFILES.filter((v) => filterRegion === 'ALL' || v.region === filterRegion)
-    : webSpeechVoices;
+  const lemonfoxVoices = VOICE_PROFILES.filter(
+    (v) => filterRegion === 'ALL' || v.region === filterRegion
+  );
 
   return (
     <div className="w-full max-w-6xl mx-auto p-6 space-y-8">
@@ -319,7 +319,7 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto pr-2">
           {ttsProvider === 'lemonfox' ? (
             // Lemonfox voices
-            filteredVoices.map((voice) => (
+            lemonfoxVoices.map((voice) => (
               <div
                 key={voice.id}
                 className={`glass-card-hover p-4 cursor-pointer ${
