@@ -14,7 +14,6 @@
     "pm2:logs": "pm2 logs deck-narrator-dev"
   },
   "dependencies": {
-    "edge-tts-universal": "^1.0.7",
     "react": "^19.2.0",
     "react-dom": "^19.2.0"
   },

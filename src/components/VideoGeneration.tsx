@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import type { Slide, VideoGenerationProgress, TTSProvider } from '../types';
 import { TTSService } from '../services/ttsService';
 import { WebSpeechService } from '../services/webSpeechService';
-import { EdgeTTSService } from '../services/edgeTTSService';
+import { PuterTTSService } from '../services/puterTTSService';
 import { VideoCompiler } from '../services/videoCompiler';
 
 interface VideoGenerationProps {
@@ -64,7 +64,7 @@ export const VideoGeneration: React.FC<VideoGenerationProps> = ({
       // Create TTS service based on provider
       const ttsService =
         ttsProvider === 'lemonfox' ? new TTSService(apiKey) :
-        ttsProvider === 'edgetts' ? new EdgeTTSService() :
+        ttsProvider === 'putertts' ? new PuterTTSService() :
         new WebSpeechService();
 
       const updatedSlides = [...slides];

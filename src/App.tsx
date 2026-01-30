@@ -11,7 +11,7 @@ function App() {
   const [project, setProject] = useState<ProjectState>({
     pdfFile: null,
     selectedVoiceId: '',
-    ttsProvider: 'edgetts',
+    ttsProvider: 'putertts',
     selectedModel: '',
     slides: [],
     finalVideoBlob: null,
@@ -74,7 +74,7 @@ function App() {
     setProject({
       pdfFile: null,
       selectedVoiceId: '',
-      ttsProvider: 'edgetts',
+      ttsProvider: 'putertts',
       selectedModel: '',
       slides: [],
       finalVideoBlob: null,

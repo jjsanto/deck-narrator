@@ -4,7 +4,7 @@ import { OPENROUTER_MODELS, DEFAULT_MODEL } from '../config/models';
 import { API_CONFIG } from '../config/api';
 import { TTSService } from '../services/ttsService';
 import { WebSpeechService } from '../services/webSpeechService';
-import { EdgeTTSService, type EdgeTTSVoice } from '../services/edgeTTSService';
+import { PuterTTSService, type PuterTTSVoice } from '../services/puterTTSService';
 import type { TTSProvider } from '../types';
 
 interface UploadSetupProps {
@@ -19,8 +19,8 @@ interface UploadSetupProps {
 
 export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
   const [file, setFile] = useState<File | null>(null);
-  const [selectedVoice, setSelectedVoice] = useState('en-US-AriaNeural');
-  const [ttsProvider, setTtsProvider] = useState<TTSProvider>('edgetts');
+  const [selectedVoice, setSelectedVoice] = useState('neural:Joanna');
+  const [ttsProvider, setTtsProvider] = useState<TTSProvider>('putertts');
   const [selectedModel, setSelectedModel] = useState(DEFAULT_MODEL);
   const [openRouterKey, setOpenRouterKey] = useState('');
   const [lemonfoxKey, setLemonfoxKey] = useState('');
@@ -28,7 +28,7 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
   const [error, setError] = useState<string | null>(null);
   const [filterRegion, setFilterRegion] = useState<'ALL' | 'US' | 'UK' | 'AU' | 'IN'>('ALL');
   const [webSpeechVoices, setWebSpeechVoices] = useState<SpeechSynthesisVoice[]>([]);
-  const [edgeTTSVoices, setEdgeTTSVoices] = useState<EdgeTTSVoice[]>([]);
+  const [puterTTSVoices, setPuterTTSVoices] = useState<PuterTTSVoice[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -45,13 +45,13 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
 
       loadVoices();
       window.speechSynthesis.onvoiceschanged = loadVoices;
-    } else if (ttsProvider === 'edgetts') {
-      // Load Edge TTS voices
-      const loadEdgeVoices = async () => {
-        const voices = await EdgeTTSService.getAvailableVoices();
-        setEdgeTTSVoices(voices);
+    } else if (ttsProvider === 'putertts') {
+      // Load Puter TTS voices
+      const loadPuterVoices = async () => {
+        const voices = await PuterTTSService.getAvailableVoices();
+        setPuterTTSVoices(voices);
       };
-      loadEdgeVoices();
+      loadPuterVoices();
     }
   }, [ttsProvider]);
 
@@ -85,8 +85,8 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
         const service = new WebSpeechService();
         await service.createPreviewAudio(voiceId);
         setIsPlayingPreview(false);
-      } else if (ttsProvider === 'edgetts') {
-        const service = new EdgeTTSService();
+      } else if (ttsProvider === 'putertts') {
+        const service = new PuterTTSService();
         await service.createPreviewAudio(voiceId);
         setIsPlayingPreview(false);
       } else {
@@ -125,7 +125,7 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
     }
 
     if (ttsProvider === 'lemonfox' && !lemonfoxKey) {
-      setError('Please enter your Lemonfox API key or switch to Edge TTS (Free)');
+      setError('Please enter your Lemonfox API key or switch to Puter TTS (Free)');
       return;
     }
 
@@ -189,11 +189,11 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
 
           <button
             onClick={() => {
-              setTtsProvider('edgetts');
-              setSelectedVoice('en-US-AriaNeural');
+              setTtsProvider('putertts');
+              setSelectedVoice('neural:Joanna');
             }}
             className={`p-6 rounded-xl border-2 transition-all ${
-              ttsProvider === 'edgetts'
+              ttsProvider === 'putertts'
                 ? 'border-blue-500 bg-blue-500/10'
                 : 'border-glass-border bg-glass-bg hover:bg-glass-hover'
             }`}
@@ -201,20 +201,20 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
             <div className="text-left space-y-2">
               <div className="flex items-center gap-2">
                 <span className="text-2xl">🚀</span>
-                <h3 className="text-xl font-semibold text-white">Edge TTS</h3>
+                <h3 className="text-xl font-semibold text-white">Puter TTS</h3>
                 <span className="text-xs bg-blue-500/20 text-blue-400 px-2 py-1 rounded-full">
                   FREE
                 </span>
               </div>
               <p className="text-sm text-gray-400">
-                Microsoft Edge TTS • No API key • Generates videos
+                Amazon Polly voices • No API key • Generates videos
               </p>
               <ul className="text-xs text-gray-500 space-y-1">
                 <li>✓ Completely free</li>
-                <li>✓ No limits</li>
-                <li>✓ 22+ professional voices</li>
+                <li>✓ Unlimited usage</li>
+                <li>✓ 17+ neural voices</li>
                 <li>✓ Generates videos successfully</li>
-                <li>✓ High quality neural voices</li>
+                <li>✓ High quality neural & generative voices</li>
               </ul>
             </div>
           </button>
@@ -385,7 +385,7 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
               ))}
             </div>
           )}
-          {ttsProvider === 'edgetts' && (
+          {ttsProvider === 'putertts' && (
             <div className="flex gap-2">
               {(['ALL', 'US', 'UK', 'AU', 'IN'] as const).map((region) => (
                 <button
@@ -442,7 +442,7 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
             </div>
           ))}
 
-          {ttsProvider === 'edgetts' && edgeTTSVoices
+          {ttsProvider === 'putertts' && puterTTSVoices
             .filter((v) => filterRegion === 'ALL' || v.locale.startsWith(`en-${filterRegion}`))
             .map((voice) => (
             <div
