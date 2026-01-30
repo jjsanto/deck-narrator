@@ -219,10 +219,6 @@ export class VideoCompiler {
     });
   }
 
-  private waitForFrame(duration: number): Promise<void> {
-    return new Promise((resolve) => setTimeout(resolve, duration));
-  }
-
   private getSupportedMimeType(): string | null {
     const types = [
       API_CONFIG.video.codecs.mp4,
