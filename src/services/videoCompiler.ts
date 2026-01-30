@@ -223,25 +223,23 @@ export class VideoCompiler {
         this.canvas.height
       );
 
-      // Small delay to ensure captureStream picks up the frame
-      await new Promise(resolve => setTimeout(resolve, 1));
-
-      // Wait for next frame using consistent frame timing
-      const targetTime = startTime + (currentFrame + 1) * frameDuration;
-      const now = performance.now();
-      const waitTime = targetTime - now;
-
-      if (waitTime > 1) {
-        await new Promise(resolve => setTimeout(resolve, waitTime - 1));
-      }
+      currentFrame++;
+      frameInCurrentSlide++;
 
       // Log progress occasionally
       if (currentFrame % 30 === 0) {
         console.log(`[VideoCompiler] Rendered frame ${currentFrame}/${totalFrames} (slide ${currentSlideIndex + 1})`);
       }
 
-      currentFrame++;
-      frameInCurrentSlide++;
+      // Calculate wait time until next frame should be drawn
+      const targetTime = startTime + (currentFrame * frameDuration);
+      const now = performance.now();
+      const waitTime = targetTime - now;
+
+      // Only wait if we're ahead of schedule
+      if (waitTime > 0 && currentFrame < totalFrames) {
+        await new Promise(resolve => setTimeout(resolve, waitTime));
+      }
     }
 
     const elapsed = (performance.now() - startTime) / 1000;
