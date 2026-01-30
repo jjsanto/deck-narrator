@@ -16,10 +16,14 @@ export const API_CONFIG = {
     fps: 30,
     audioPadding: 400, // ms
     bitrate: 5000000, // 5 Mbps
-    codecs: {
-      mp4: 'video/mp4; codecs=avc1,opus',
-      webm: 'video/webm; codecs=vp9,opus',
-    },
+    codecs: [
+      // Try AAC audio for MP4 (QuickTime compatible)
+      'video/mp4; codecs="avc1.42E01E, mp4a.40.2"',
+      // Fallback to Opus for MP4
+      'video/mp4; codecs=avc1,opus',
+      // WebM with Opus (not QuickTime compatible but widely supported)
+      'video/webm; codecs=vp9,opus',
+    ],
   },
   upload: {
     maxSizeMB: 50,

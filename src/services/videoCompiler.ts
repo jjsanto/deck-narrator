@@ -256,17 +256,17 @@ export class VideoCompiler {
   }
 
   private getSupportedMimeType(): string | null {
-    const types = [
-      API_CONFIG.video.codecs.mp4,
-      API_CONFIG.video.codecs.webm,
-    ];
+    const types = API_CONFIG.video.codecs;
 
     for (const type of types) {
+      console.log(`[VideoCompiler] Testing codec: ${type} - Supported: ${MediaRecorder.isTypeSupported(type)}`);
       if (MediaRecorder.isTypeSupported(type)) {
+        console.log(`[VideoCompiler] Selected codec: ${type}`);
         return type;
       }
     }
 
+    console.error('[VideoCompiler] No supported codecs found!');
     return null;
   }
 
