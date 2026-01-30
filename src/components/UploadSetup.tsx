@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { VOICE_PROFILES, DEFAULT_VOICE } from '../config/voices';
+import { VOICE_PROFILES, DEFAULT_VOICE, type VoiceProfile } from '../config/voices';
 import { API_CONFIG } from '../config/api';
 import { TTSService } from '../services/ttsService';
 import { WebSpeechService } from '../services/webSpeechService';
@@ -119,7 +119,7 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
     });
   };
 
-  const lemonfoxVoices = VOICE_PROFILES.filter(
+  const lemonfoxVoices: VoiceProfile[] = VOICE_PROFILES.filter(
     (v) => filterRegion === 'ALL' || v.region === filterRegion
   );
 
