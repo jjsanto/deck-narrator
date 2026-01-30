@@ -9,11 +9,23 @@ export class VideoCompiler {
 
   constructor(progressCallback: (progress: VideoGenerationProgress) => void) {
     this.canvas = document.createElement('canvas');
-    const ctx = this.canvas.getContext('2d');
+    const ctx = this.canvas.getContext('2d', {
+      alpha: false,
+      desynchronized: false
+    });
     if (!ctx) {
       throw new Error('Failed to get canvas 2D context');
     }
     this.ctx = ctx;
+
+    // Attach canvas to DOM (hidden) - some browsers need this for MediaRecorder
+    this.canvas.style.position = 'fixed';
+    this.canvas.style.top = '-9999px';
+    this.canvas.style.left = '-9999px';
+    document.body.appendChild(this.canvas);
+
+    console.log('[VideoCompiler] Canvas attached to DOM');
+
     this.audioContext = new AudioContext();
     this.progressCallback = progressCallback;
   }
@@ -46,8 +58,8 @@ export class VideoCompiler {
       const combinedAudio = await this.combineAudio(slides);
       console.log(`[VideoCompiler] Combined audio duration: ${combinedAudio.duration}s`);
 
-      // Create MediaRecorder with manual FPS control
-      const canvasStream = this.canvas.captureStream(0); // 0 = manual frame capture
+      // Create MediaRecorder with automatic FPS capture
+      const canvasStream = this.canvas.captureStream(API_CONFIG.video.fps);
 
       // Add audio track to canvas stream
       const audioDestination = this.audioContext.createMediaStreamDestination();
@@ -85,14 +97,14 @@ export class VideoCompiler {
 
       console.log(`[VideoCompiler] Starting recording...`);
       mediaRecorder.start();
+
+      // Small delay to ensure recording starts
+      await new Promise(resolve => setTimeout(resolve, 100));
+
       audioSource.start(0);
 
-      // Get video track for manual frame requests
-      const videoTrack = canvasStream.getVideoTracks()[0];
-      console.log(`[VideoCompiler] Video track:`, videoTrack);
-
-      // Render slides with manual frame capture
-      await this.renderSlides(slides, videoTrack);
+      // Render slides
+      await this.renderSlides(slides);
 
       // Stop recording
       console.log(`[VideoCompiler] Stopping recording...`);
@@ -152,7 +164,7 @@ export class VideoCompiler {
     return combinedBuffer;
   }
 
-  private async renderSlides(slides: Slide[], videoTrack?: MediaStreamTrack): Promise<void> {
+  private async renderSlides(slides: Slide[]): Promise<void> {
     const fps = API_CONFIG.video.fps;
     const frameDuration = 1000 / fps; // ms per frame
     const paddingSeconds = API_CONFIG.video.audioPadding / 1000;
@@ -211,18 +223,16 @@ export class VideoCompiler {
         this.canvas.height
       );
 
-      // Manually request frame capture if using manual mode
-      if (videoTrack && 'requestFrame' in videoTrack) {
-        (videoTrack as any).requestFrame();
-      }
+      // Small delay to ensure captureStream picks up the frame
+      await new Promise(resolve => setTimeout(resolve, 1));
 
       // Wait for next frame using consistent frame timing
       const targetTime = startTime + (currentFrame + 1) * frameDuration;
       const now = performance.now();
       const waitTime = targetTime - now;
 
-      if (waitTime > 0) {
-        await new Promise(resolve => setTimeout(resolve, waitTime));
+      if (waitTime > 1) {
+        await new Promise(resolve => setTimeout(resolve, waitTime - 1));
       }
 
       // Log progress occasionally
@@ -263,6 +273,11 @@ export class VideoCompiler {
   }
 
   cleanup(): void {
+    // Remove canvas from DOM
+    if (this.canvas.parentNode) {
+      this.canvas.parentNode.removeChild(this.canvas);
+      console.log('[VideoCompiler] Canvas removed from DOM');
+    }
     this.audioContext.close();
   }
 }
