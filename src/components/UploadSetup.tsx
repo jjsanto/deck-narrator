@@ -319,7 +319,7 @@ export const UploadSetup: React.FC<UploadSetupProps> = ({ onComplete }) => {
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4 max-h-96 overflow-y-auto pr-2">
           {ttsProvider === 'lemonfox' ? (
             // Lemonfox voices
-            lemonfoxVoices.map((voice) => (
+            lemonfoxVoices.map((voice: VoiceProfile) => (
               <div
                 key={voice.id}
                 className={`glass-card-hover p-4 cursor-pointer ${
