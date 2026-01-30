@@ -139,28 +139,71 @@ export class VideoCompiler {
     const frameDuration = 1000 / fps; // ms per frame
     const paddingSeconds = API_CONFIG.video.audioPadding / 1000;
 
+    // Calculate slide timings
+    const slideTimings: { startTime: number; endTime: number; image: HTMLImageElement }[] = [];
+    let currentTime = 0;
+
+    // Pre-load all images and calculate timings
     for (let i = 0; i < slides.length; i++) {
       const slide = slides[i];
       const slideDuration = (slide.audioBuffer?.duration || 0) + paddingSeconds;
-
-      this.progressCallback({
-        stage: 'rendering',
-        currentSlide: i + 1,
-        totalSlides: slides.length,
-        percentage: Math.round((i / slides.length) * 100),
-        message: `Rendering slide ${i + 1} of ${slides.length}`,
-      });
-
-      // Load and draw slide image
       const image = await this.loadImage(slide.imageDataUrl);
 
-      // Render frames for this slide
-      const slideFrames = Math.ceil((slideDuration * 1000) / frameDuration);
-      for (let frame = 0; frame < slideFrames; frame++) {
-        this.ctx.drawImage(image, 0, 0, this.canvas.width, this.canvas.height);
-        await this.waitForFrame(frameDuration);
+      slideTimings.push({
+        startTime: currentTime,
+        endTime: currentTime + slideDuration,
+        image: image
+      });
+
+      currentTime += slideDuration;
+    }
+
+    const totalDuration = currentTime;
+    const startTime = performance.now();
+    let frameCount = 0;
+    const totalFrames = Math.ceil(totalDuration * fps);
+
+    console.log(`[VideoCompiler] Rendering ${totalFrames} frames for ${slides.length} slides, total duration: ${totalDuration}s`);
+
+    // Render frames synchronized to real time
+    while (frameCount < totalFrames) {
+      const elapsedMs = performance.now() - startTime;
+      const elapsedSeconds = elapsedMs / 1000;
+
+      // Find which slide should be showing at this time
+      const currentSlideIndex = slideTimings.findIndex(
+        timing => elapsedSeconds >= timing.startTime && elapsedSeconds < timing.endTime
+      );
+
+      if (currentSlideIndex !== -1) {
+        const currentSlide = slideTimings[currentSlideIndex];
+
+        // Draw the current slide
+        this.ctx.drawImage(currentSlide.image, 0, 0, this.canvas.width, this.canvas.height);
+
+        // Update progress
+        this.progressCallback({
+          stage: 'rendering',
+          currentSlide: currentSlideIndex + 1,
+          totalSlides: slides.length,
+          percentage: Math.round((frameCount / totalFrames) * 100),
+          message: `Rendering slide ${currentSlideIndex + 1} of ${slides.length}`,
+        });
+      }
+
+      frameCount++;
+
+      // Wait for next frame (synchronized to real time, not accumulated delays)
+      const targetTime = startTime + (frameCount * frameDuration);
+      const now = performance.now();
+      const waitTime = Math.max(0, targetTime - now);
+
+      if (waitTime > 0) {
+        await this.waitForFrame(waitTime);
       }
     }
+
+    console.log(`[VideoCompiler] Rendering complete. Rendered ${frameCount} frames in ${(performance.now() - startTime) / 1000}s`);
   }
 
   private loadImage(dataUrl: string): Promise<HTMLImageElement> {
