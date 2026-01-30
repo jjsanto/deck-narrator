@@ -1,7 +1,7 @@
 export const API_CONFIG = {
   openRouter: {
     baseUrl: 'https://openrouter.ai/api/v1/chat/completions',
-    model: 'google/gemini-2.0-flash-exp:free',
+    model: 'google/gemma-3-12b-it',
     maxTokens: 150,
   },
   lemonfox: {
